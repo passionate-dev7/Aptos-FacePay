@@ -1,64 +1,31 @@
 import React from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { WalletSelector } from "./ConnectWallet";
+import { NotebookPen, ScanLine, Sparkles } from "lucide-react";
+import Link from "next/link";
 
-const Navbar = ({
-  currentView,
-  setCurrentView,
-}: {
-  currentView: "register" | "recognize";
-  setCurrentView: (currentView: "register" | "recognize") => void;
-}) => {
+const Navbar = () => {
   return (
-    <header className="glass-effect border-b border-white/20 sticky top-0 z-50 dark:bg-slate-900/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-face-primary to-face-secondary rounded-lg flex items-center justify-center">
-              <span className="font-bold text-xl">🎭</span>
+    <header className="relative z-50 border-b bg-background/80 backdrop-blur-xl border-purple-200/50 dark:border-purple-800/50">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center animate-pulse">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold gradient-text">Aptos FacePay</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Pay by Face
-              </p>
-            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Aptos FacePay
+            </span>
           </div>
-
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <button
-              onClick={() => setCurrentView("register")}
-              className={`px-3 py-2 rounded-lg transition-colors ${currentView === "register"
-                ? "bg-face-primary text-black dark:text-white"
-                : "text-gray-600 dark:text-gray-300 hover:text-face-primary dark:hover:text-face-primary"
-                }`}
-            >
-              📝 Register
-            </button>
-            <button
-              onClick={() => setCurrentView("recognize")}
-              className={`px-3 py-2 rounded-lg transition-colors ${currentView === "recognize"
-                ? "bg-face-primary text-black dark:text-white"
-                : "text-gray-600 dark:text-gray-300 hover:text-face-primary dark:hover:text-face-primary"
-                }`}
-            >
-              🎯 Recognize
-            </button>
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="/register" className="flex gap-1 text-muted-foreground hover:text-purple-600 transition-colors duration-300 hover:scale-105">
+              <NotebookPen /> Register
+            </Link>
+            <Link href="/scan" className="flex gap-1 text-muted-foreground hover:text-purple-600 transition-colors duration-300 hover:scale-105">
+              <ScanLine /> Scan & Pay
+            </Link>
           </nav>
-
-          {/* Wallet Connection & Auth */}
           <div className="flex items-center space-x-4">
-            {/* {savedFaces.length > 0 && (
-                            <button
-                                onClick={clearAllFaces}
-                                className="px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            >
-                                🗑️ Clear All
-                            </button>
-                        )} */}
-
             <ThemeToggle />
             <WalletSelector />
           </div>

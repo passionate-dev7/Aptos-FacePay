@@ -61,34 +61,6 @@ const LandingPage = () => {
                 <div className="absolute bottom-40 right-40 w-96 h-96 bg-gradient-to-r from-orange-400 to-red-400 rounded-full blur-3xl animate-pulse delay-2000"></div>
             </div>
 
-            {/* Header */}
-            <header className="relative z-50 border-b bg-background/80 backdrop-blur-xl border-purple-200/50 dark:border-purple-800/50">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center animate-pulse">
-                                <Sparkles className="w-5 h-5 text-white" />
-                            </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                Aptos FacePay
-                            </span>
-                        </div>
-                        <nav className="hidden md:flex items-center space-x-8">
-                            <Link href="/register" className="flex gap-1 text-muted-foreground hover:text-purple-600 transition-colors duration-300 hover:scale-105">
-                                <NotebookPen /> Register
-                            </Link>
-                            <Link href="/scan" className="flex gap-1 text-muted-foreground hover:text-purple-600 transition-colors duration-300 hover:scale-105">
-                                <ScanLine /> Scan & Pay
-                            </Link>
-                        </nav>
-                        <div className="flex items-center space-x-4">
-                            <ThemeToggle />
-                            <WalletSelector />
-                        </div>
-                    </div>
-                </div>
-            </header>
-
             {/* Hero Section */}
             <section className="relative z-10 py-20 md:py-32">
                 <div className="container mx-auto px-4">

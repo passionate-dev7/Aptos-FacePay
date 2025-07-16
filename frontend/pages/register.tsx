@@ -4,10 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Camera, CheckCircle, AlertCircle, User, Mail, Wallet, ArrowLeft, Sparkles, Copy, LogOut } from 'lucide-react';
-import Link from 'next/link';
+import { Camera, CheckCircle, AlertCircle, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ProfileData } from '@/types';
@@ -15,6 +13,15 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { Textarea } from '@/components/ui/textarea';
 import Webcam from 'react-webcam';
 import * as faceapi from 'face-api.js';
+import { uploadDataAndGetBlobId } from '@/lib/storage';
+
+// Map token symbols to their addresses
+const TOKEN_ADDRESS_MAP: Record<string, string> = {
+    APT: "0x1::aptos_coin::AptosCoin",
+    USDC: "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC",
+    USDT: "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDT",
+    WETH: "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::WETH",
+};
 
 export default function RegisterPage() {
     const { connected, account, signAndSubmitTransaction } = useWallet()
@@ -105,13 +112,19 @@ export default function RegisterPage() {
         setIsCapturing(true);
         try {
             const imageSrc = webcamRef.current.getScreenshot();
+            console.log("Image Src", imageSrc);
+
             if (!imageSrc) {
                 throw new Error('Failed to capture image');
             }
             setCapturedImage(imageSrc);
             // Detect faces in the captured image
             const image = await createImageFromDataUrl(imageSrc);
+            console.log("IMage", image);
+
             const detections = await detectFacesInImage(image);
+            console.log("detections", detections);
+
             if (detections.length === 0) {
                 alert('No faces detected. Please ensure your face is clearly visible and try again.');
                 setIsCapturing(false);
@@ -257,25 +270,33 @@ export default function RegisterPage() {
             console.log("faceData", faceData);
 
             setUploadProgress('Uploading to storage...');
-            // Simulate upload
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            const storageBlobId = 'blob_' + Date.now().toString();
+
+            const storageBlobId = await uploadDataAndGetBlobId(faceData, account.address.toString());
+            console.log("storageBlobId", storageBlobId);
+
+            if (!storageBlobId) {
+                setUploadProgress("")
+                return
+            };
+
             setUploadProgress('Registering on Aptos blockchain...');
             try {
+                // Get the token address from the map, default to APT if not found
+                const tokenType = TOKEN_ADDRESS_MAP[formData.preferredToken] || TOKEN_ADDRESS_MAP['APT'];
                 // For Aptos wallet-adapter, use top-level payload (not wrapped in {data: ...})
-                // const payload = {
-                //     function: "facepay::registry::register_user",
-                //     typeArguments: [],
-                //     arguments: [
-                //         faceData.hash,
-                //         storageBlobId,
-                //         '0x1::aptos_coin::AptosCoin',
-                //         faceData.profileData.name,
-                //         process.env.NEXT_PUBLIC_REGISTRY_ADMIN || account.address.toString(),
-                //     ],
-                // };
-                // const transaction = await signAndSubmitTransaction(payload);
-                setUploadProgress('Transaction submitted! Waiting for confirmation...');
+                const payload = {
+                    function: "facepay::registry::register_user",
+                    typeArguments: [],
+                    arguments: [
+                        faceData.hash,
+                        storageBlobId,
+                        tokenType,
+                        faceData.profileData.name,
+                        process.env.NEXT_PUBLIC_REGISTRY_ADMIN || account.address.toString(),
+                    ],
+                };
+                const transaction = await signAndSubmitTransaction(payload);
+                setUploadProgress('Transaction submitted! Waiting for confirmation...', transaction);
                 await new Promise(resolve => setTimeout(resolve, 5000));
                 setUploadProgress('Face registered successfully on Aptos!');
                 setFormData({
@@ -559,19 +580,16 @@ export default function RegisterPage() {
                         <p className="text-muted-foreground">
                             Your face has been successfully registered. You can now make payments using facial recognition.
                         </p>
-                        <div className="bg-green-50 p-4 rounded-lg">
-                            <h3 className="font-semibold mb-2">Next Steps:</h3>
-                            <ul className="text-sm text-left space-y-1">
-                                <li>• Test your face recognition</li>
-                                <li>• Connect your wallet</li>
-                                <li>• Start making payments</li>
-                            </ul>
-                        </div>
+                        {capturedImage && (
+                            <img
+                                src={capturedImage}
+                                alt="Captured face"
+                                className="max-w-full h-auto rounded-lg border-2 border-face-primary mb-4 mx-auto"
+                            />
+                        )}
                         <div className="flex gap-3">
-                            <Button asChild variant="outline" className="flex-1">
-                                <Link href="/scan">
-                                    Test Recognition
-                                </Link>
+                            <Button asChild variant="outline" className="flex-1" onClick={() => setStep(3)}>
+                                <ArrowLeft size={20} /> <span className='ml-2'>Back</span>
                             </Button>
                             <Button
                                 className="flex-1"
@@ -596,25 +614,6 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-purple-50/50 dark:via-purple-950/20 to-blue-50/50 dark:to-blue-950/20">
-            {/* Header */}
-            <header className="border-b bg-background/80 backdrop-blur-xl border-purple-200/50 dark:border-purple-800/50">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <Button asChild variant="ghost">
-                            <Link href="/" className='flex items-center'>
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Back to Home
-                            </Link>
-                        </Button>
-                        <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center animate-pulse">
-                                <Sparkles className="w-5 h-5 text-white" />
-                            </div>
-                            <span className="text-xl font-bold">Face Registration</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
             {/* Main Content */}
             <main className="container mx-auto px-4 py-12">
                 <div className="max-w-md mx-auto">

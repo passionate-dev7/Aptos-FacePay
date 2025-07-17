@@ -24,6 +24,7 @@
     "@tanstack/react-query": "^5.76.2",
     "@tusky-io/ts-sdk": "0.29.3",
     "@vladmandic/face-api": "^1.7.12",
+    "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",

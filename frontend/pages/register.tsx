@@ -44,6 +44,9 @@ export default function RegisterPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState('');
 
+    // Add state for last face data for download
+    const [lastFaceData, setLastFaceData] = useState<any>(null);
+
     const [formData, setFormData] = useState<ProfileData>({
         name: '',
         email: '',
@@ -269,6 +272,8 @@ export default function RegisterPage() {
             };
             console.log("faceData", faceData);
 
+            setLastFaceData(faceData);
+
             setUploadProgress('Uploading to storage...');
 
             const storageBlobId = await uploadDataAndGetBlobId(faceData, account.address.toString());
@@ -323,6 +328,20 @@ export default function RegisterPage() {
         } finally {
             setIsUploading(false);
         }
+    };
+
+    // Download face data as JSON file
+    const downloadFaceData = () => {
+        if (!lastFaceData) return;
+        const blob = new Blob([JSON.stringify(lastFaceData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${lastFaceData.profileData.aptosAddress || 'face-data'}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
 
@@ -599,6 +618,16 @@ export default function RegisterPage() {
                                 {isUploading ? 'Registering on Blockchain...' : 'Register Face on Blockchain'}
                             </Button>
                         </div>
+                        {/* Download Face Data Button */}
+                        {lastFaceData && (
+                            <Button
+                                className="flex-1 mt-2"
+                                variant="outline"
+                                onClick={downloadFaceData}
+                            >
+                                Download Face Data
+                            </Button>
+                        )}
                         {uploadProgress && (
                             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                                 <p className="text-sm text-blue-700">{uploadProgress}</p>

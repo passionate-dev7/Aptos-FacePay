@@ -1,27 +1,44 @@
 import lighthouse from '@lighthouse-web3/sdk';
 import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
 
-const LIGHTHOUSE_API_KEY = '15b9fbbe.e23de1e7f65c424f930df86b7d1956b6';
+const PINATA_API_KEY = process.env.NEXT_PUBLIC_PINATA_API_KEY!;
+const PINATA_SECRET_API_KEY = process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY!;
 
 export const uploadDataAndGetBlobId = async (jsonData, address: string) => {
     try {
         const blob = new Blob([JSON.stringify(jsonData, null, 2)], {
             type: 'application/json',
         });
-        console.log("blob", blob);
-
-        console.log("JSON file size (bytes):", blob.size);
 
         const file = new File([blob], `${address}.json`, {
             type: 'application/json',
         });
-        console.log("file >>>", file);
 
-        const result = await lighthouse.upload([file], LIGHTHOUSE_API_KEY);
+        const formData = new FormData();
+        formData.append('file', file);
 
-        console.log("result >>>>", result);
+        const metadata = JSON.stringify({
+            name: `${address}.json`,
+        });
+        formData.append('pinataMetadata', metadata);
 
-        const blobId = result.data.Hash;
+        const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                pinata_api_key: PINATA_API_KEY,
+                pinata_secret_api_key: PINATA_SECRET_API_KEY,
+            },
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) throw new Error(result.error || 'Upload failed');
+
+        const blobId = result.IpfsHash;
+        console.log('✅ Uploaded to Pinata. CID:', blobId);
 
         return blobId;
     } catch (error) {
@@ -34,11 +51,10 @@ export const fetchData = async (blobId) => {
     if (!blobId) return;
 
     try {
-        const res = await fetch(`https://gateway.lighthouse.storage/ipfs/${blobId}`);
-        const response = await res.json();
-        console.log("response >>>", response);
-
-        return response
+        const url = `https://gateway.pinata.cloud/ipfs/${blobId}`;
+        const res = await axios.get(url);
+        console.log('✅ Fetched from Pinata:', res.data);
+        return res.data;
     } catch (err) {
         console.error('Error fetching blob:', err);
         throw new Error(`Error fetching data from ipfs: ${err}`)

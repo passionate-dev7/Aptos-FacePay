@@ -39,7 +39,7 @@ export default function ScanPage() {
         setMatchedProfile(detected.matchedProfile || null)
         // You can trigger payment logic here if you want
         // For now, just log:
-        // console.log('Matched face:', detected)
+        console.log('Matched face:', detected)
     }
 
     return (

@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react'
 import { Network } from '@aptos-labs/ts-sdk'
+import { APTOS_API_KEY, NETWORK } from '@/constants'
+import { toast } from "sonner"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,13 +25,13 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <AptosWalletAdapterProvider
         autoConnect={true}
-        dappConfig={{ 
+        dappConfig={{
           network: Network.TESTNET,
-          // Add your API key here if needed
-          // aptosApiKey: "your-api-key-here"
+          aptosApiKeys: { [NETWORK]: APTOS_API_KEY }
         }}
         onError={(error) => {
           console.error('Wallet connection error:', error)
+          toast.error(`Unknown wallet error: ${error}`);
         }}
       >
         {children}

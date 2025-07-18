@@ -113,6 +113,8 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
     setIsCapturing(true)
     try {
       const imageSrc = webcamRef.current.getScreenshot()
+      console.log("imageSrc", imageSrc);
+
       if (!imageSrc) {
         throw new Error('Failed to capture image')
       }
@@ -121,7 +123,10 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
 
       // Detect faces in the captured image
       const image = await createImageFromDataUrl(imageSrc)
+      console.log("image", image);
+
       const detections = await detectFacesInImage(image)
+      console.log("detections >>", detections);
 
       if (detections.length === 0) {
         alert('No faces detected. Please ensure your face is clearly visible and try again.')
@@ -222,7 +227,7 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
   }
 
   const registerFace = async () => {
-    if (!detectedFaces[selectedFaceIndex] || !connected || !account?.address) {
+    if (!detectedFaces[selectedFaceIndex]) {
       alert('Please select a face and connect your wallet first.')
       return
     }
@@ -237,7 +242,10 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
 
     try {
       const selectedDetection = detectedFaces[selectedFaceIndex]
+      console.log("selectedDetection", selectedDetection);
+
       const descriptor = selectedDetection.descriptor
+      console.log("descriptor", descriptor);
 
       // Prepare face descriptor data with correct structure
       const faceDescriptor: FaceDescriptor = {
@@ -246,11 +254,15 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
         detection: selectedDetection.detection
       }
 
+      console.log("faceDescriptor", faceDescriptor);
+
       // Prepare face data for storage
       const faceData = prepareFaceData(faceDescriptor, {
         ...profileData,
         aptosAddress: account.address.toString()
       })
+
+      console.log("faceData", faceData);
 
       setUploadProgress('Uploading to storage...')
 
@@ -280,7 +292,7 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
         console.log('✅ Face registration transaction:', transaction.hash)
 
         setUploadProgress('Transaction submitted! Waiting for confirmation...')
-        
+
         // Wait for transaction confirmation
         // Note: In a real app, you'd want to poll for transaction status
         await new Promise(resolve => setTimeout(resolve, 5000))
@@ -552,7 +564,7 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
             <div className="text-center">
               <button
                 onClick={capturePhoto}
-                disabled={isCapturing || !!webcamError || !isModelLoaded || !connected}
+                disabled={isCapturing || !!webcamError || !isModelLoaded}
                 className="px-6 py-3 bg-face-primary text-white rounded-lg hover:bg-face-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCapturing ? '📸 Capturing...' : '📸 Capture Photo'}
@@ -600,7 +612,7 @@ export default function FaceRegistration({ onSuccess, onError, className }: Face
               </button>
               <button
                 onClick={registerFace}
-                disabled={isUploading || !profileData.name.trim() || !connected}
+                disabled={isUploading || !profileData.name.trim()}
                 className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? '⏳ Registering...' : '✅ Register Face'}

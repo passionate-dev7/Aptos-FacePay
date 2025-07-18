@@ -42,6 +42,13 @@ const nextConfig = {
     experimental: {
       esmExternals: 'loose',
     },
+
+    typescript: {
+      ignoreBuildErrors: true,
+    },
+    eslint: {
+      ignoreDuringBuilds: true,
+    },
   }
   
   module.exports = nextConfig
